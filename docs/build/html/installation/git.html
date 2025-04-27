@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Download the software with GIT &mdash; wsprdaemon 3.3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuring wsprdaemon: wsprdaemon.conf" href="../configuration/wd_conf.html" />
+    <link rel="prev" title="Preparing for installation" href="preparation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            wsprdaemon
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Description</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../description/how_it_works.html">How wsprdaemon Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../description/validity.html">Validity of data path and results</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Requirements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../requirements/os.html">Operating Sytems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements/radios.html">Compatible Radios</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements/network.html">Networking</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Software Installation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preparation.html">Preparing for installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Download the software with GIT</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#clone-wsprdaemon-from-github-com">Clone wsprdaemon from github.com</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#to-install-ka9q-radio-independently">To install ka9q-radio independently:</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#to-install-ka9q-web">To install ka9q-web:</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Software Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/wd_conf.html">Configuring wsprdaemon: wsprdaemon.conf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/radiod_conf.html">Configuring ka9q-radio: radiod&#64;.conf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/ka9q-web.html">ka9q-web</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Working Results</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../results/wspr.html">WSPR spots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results/grape.html">HamSCI WWV/H and CHU Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results/psk.html">PSKReporter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Maintenance &amp; Updates</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance/operating.html">Operating WD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance/monitoring.html">Monitoring WD operation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance/aliases.html">Aliases for monitoring and interacting with WD</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting/overview.html">Troubleshooting wsprdaemon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting/typicals.html">Some typical problems</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../external_links.html">External Links</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contributors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributors.html">Contributors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">wsprdaemon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Download the software with GIT</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/installation/git.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="download-the-software-with-git">
+<h1>Download the software with GIT<a class="headerlink" href="#download-the-software-with-git" title="Link to this heading"></a></h1>
+<p>GitHub hosts the repository for all versions of WD.  Presently, the current master provides version 3.2.3.  The latest development version, 3.3.1, remains in a branch.</p>
+<section id="clone-wsprdaemon-from-github-com">
+<h2>Clone wsprdaemon from github.com<a class="headerlink" href="#clone-wsprdaemon-from-github-com" title="Link to this heading"></a></h2>
+<p>From /home/wsprdaemon (or the installing user’s home directory) <a class="reference internal" href="preparation.html"><span class="std std-doc">See Preparing the Installation</span></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">rrobinett</span><span class="o">/</span><span class="n">wsprdaemon</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">wsprdaemon</span>
+</pre></div>
+</div>
+<p>Execute all further git commands in the /home/wsprdaemon/wsprdaemon directory.</p>
+<p>Ensure you have the latest stable version:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">master</span>
+<span class="n">git</span> <span class="n">status</span>
+<span class="n">git</span> <span class="n">log</span>
+</pre></div>
+</div>
+<p>Subsequently, to apply any updates of the latest version, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">pull</span>
+</pre></div>
+</div>
+<p>To switch to a different branch, e.g., 3.3.1, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="mf">3.3.1</span>
+<span class="n">git</span> <span class="n">pull</span>
+</pre></div>
+</div>
+<p>WD provides lots of shell “aliases” to important and otherwise useful functions.  To have immediate access to these, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">bash</span><span class="o">-</span><span class="n">aliases</span> <span class="o">../.</span><span class="n">bash_aliases</span>
+</pre></div>
+</div>
+<p>Having prepared and cloned the wsprdaemon software, now you can run it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wd</span>
+</pre></div>
+</div>
+<p>This sets the stage and prompts you to configure your setup:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../configuration/wd_conf.html"><span class="std std-doc">wsprdaemon configuration</span></a></p></li>
+<li><p><a class="reference internal" href="../configuration/radiod_conf.html"><span class="std std-doc">radiod configuration</span></a></p></li>
+<li><p>KiwiSDR</p></li>
+</ul>
+</section>
+</section>
+<section id="to-install-ka9q-radio-independently">
+<h1>To install ka9q-radio independently:<a class="headerlink" href="#to-install-ka9q-radio-independently" title="Link to this heading"></a></h1>
+<p>ka9q-radio has many uses outside its integrated role with WD. You can install and run it without WD.
+Keep in mind that Rob checks out a particular version of ka9q-radio that he knows works with WD.<br />
+So, if you use another version, you may find its interaction with WD problematic. YMMV.</p>
+<p>For details of ka9q-radio installation, consult the docs sub-directory in the ka9q-radio created after performing a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/ka9q/ka9q-radio.git">KA9Q_RADIO_GIT_URL</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ka9q/ft8_lib.git">KA9Q_FT8_GIT_URL</a></p></li>
+<li><p><a class="reference external" href="https://github.com/pjsg/ftlib-pskreporter.git">PSK_UPLOADER_GIT_URL</a></p></li>
+</ul>
+<section id="to-install-ka9q-web">
+<h2>To install ka9q-web:<a class="headerlink" href="#to-install-ka9q-web" title="Link to this heading"></a></h2>
+<p>ka9q-web requires ka9q-radio of course, but also the web server package, onion, produced by David Moreno, so install it first.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/davidmoreno/onion">ONION_GIT_URL</a></p></li>
+</ul>
+<p>Use the following bash scripts as scripts or just as a guide to installation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>declare ONION_LIBS_NEEDED=&quot;libgnutls28-dev libgcrypt20-dev cmake&quot;
+if [[ ${OS_RELEASE} =~ 24.04 ]]; then
+    ONION_LIBS_NEEDED=&quot;${ONION_LIBS_NEEDED} libgnutls30t64 libgcrypt20&quot;
+fi
+
+function build_onion() {
+    local project_subdir=$1
+    local project_logfile=&quot;${project_subdir}-build.log&quot;
+
+    wd_logger 2 &quot;Building ${project_subdir}&quot;
+    (
+    cd ${project_subdir}
+    mkdir -p build
+    cd build
+    cmake -DONION_USE_PAM=false -DONION_USE_PNG=false -DONION_USE_JPEG=false -DONION_USE_XML2=false -DONION_USE_SYSTEMD=false -DONION_USE_SQLITE3=false -DONION_USE_REDIS=false -DONION_USE_GC=false -DONION_USE_TESTS=false -DONION_EXAMPLES=false -DONION_USE_BINDINGS_CPP=false ..
+    make
+    sudo make install
+    sudo ldconfig
+    )     &gt;&amp; ${project_logfile}
+    rc=$?
+    if [[ ${rc} -ne 0 ]]; then
+         wd_logger 1 &quot;ERROR: compile of &#39;${project_subdir}&#39; returned ${rc}:\n$( &lt; ${project_logfile} )&quot;
+         exit 1
+     fi
+     wd_logger 2 &quot;Done&quot;
+    return 0
+}
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/scottnewell/ka9q-web">KA9Q_WEB_GIT_URL</a></p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>function build_ka9q_web() {
+    local project_subdir=$1
+    local project_logfile=&quot;${project_subdir}_build.log&quot;
+
+    wd_logger 2 &quot;Building ${project_subdir}&quot;
+    (
+    cd  ${project_subdir}
+    make
+    sudo make install
+    ) &gt;&amp;  ${project_logfile}
+    rc=$? ; if (( rc )); then
+        wd_logger 1 &quot;ERROR: compile of &#39;ka9q-web&#39; returned ${rc}:\n$(&lt; ${project_logfile})&quot;
+        exit 1
+    fi
+    wd_logger 2 &quot;Done&quot;
+    return 0
+}
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="preparation.html" class="btn btn-neutral float-left" title="Preparing for installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../configuration/wd_conf.html" class="btn btn-neutral float-right" title="Configuring wsprdaemon: wsprdaemon.conf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rob Robinett.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

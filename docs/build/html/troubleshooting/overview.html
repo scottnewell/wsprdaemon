@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting wsprdaemon &mdash; wsprdaemon 3.3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Some typical problems" href="typicals.html" />
+    <link rel="prev" title="Aliases for monitoring and interacting with WD" href="../maintenance/aliases.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            wsprdaemon
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Description</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../description/how_it_works.html">How wsprdaemon Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../description/validity.html">Validity of data path and results</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Requirements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../requirements/os.html">Operating Sytems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements/radios.html">Compatible Radios</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements/network.html">Networking</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Software Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/preparation.html">Preparing for installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/git.html">Download the software with GIT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/git.html#to-install-ka9q-radio-independently">To install ka9q-radio independently:</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Software Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/wd_conf.html">Configuring wsprdaemon: wsprdaemon.conf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/radiod_conf.html">Configuring ka9q-radio: radiod&#64;.conf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/ka9q-web.html">ka9q-web</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Working Results</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../results/wspr.html">WSPR spots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results/grape.html">HamSCI WWV/H and CHU Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results/psk.html">PSKReporter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Maintenance &amp; Updates</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance/operating.html">Operating WD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance/monitoring.html">Monitoring WD operation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../maintenance/aliases.html">Aliases for monitoring and interacting with WD</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting wsprdaemon</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#use-tmux-or-screen">Use tmux or screen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#use-btop">Use btop!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#use-wdln">Use wdln</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#use-wdle">Use wdle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#check-recordings">Check recordings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#check-the-logs">Check the logs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#logs-in-var-log">logs in /var/log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logs-in-wsprdaemon">logs in ~/wsprdaemon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logs-in-dev-shm-wsprdaemon">logs in /dev/shm/wsprdaemon</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="typicals.html">Some typical problems</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../external_links.html">External Links</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contributors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributors.html">Contributors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">wsprdaemon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting wsprdaemon</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/troubleshooting/overview.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting-wsprdaemon">
+<h1>Troubleshooting wsprdaemon<a class="headerlink" href="#troubleshooting-wsprdaemon" title="Link to this heading"></a></h1>
+<p>Nothing ever goes wrong!</p>
+<section id="use-tmux-or-screen">
+<h2>Use tmux or screen<a class="headerlink" href="#use-tmux-or-screen" title="Link to this heading"></a></h2>
+<p>Especially useful in managing a computer remotely.  This will enable you to maintain a session between logins or should your network connection drop.</p>
+</section>
+<section id="use-btop">
+<h2>Use btop!<a class="headerlink" href="#use-btop" title="Link to this heading"></a></h2>
+<p><img alt="" src="../_images/btop.png" /></p>
+</section>
+<section id="use-wdln">
+<h2>Use wdln<a class="headerlink" href="#use-wdln" title="Link to this heading"></a></h2>
+<p>This displays the wsprnet upload log.</p>
+</section>
+<section id="use-wdle">
+<h2>Use wdle<a class="headerlink" href="#use-wdle" title="Link to this heading"></a></h2>
+</section>
+<section id="check-recordings">
+<h2>Check recordings<a class="headerlink" href="#check-recordings" title="Link to this heading"></a></h2>
+<p>Change to the temporary directory.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cdt</span>
+</pre></div>
+</div>
+<p>Then enter the sub-directory for a receiver and channel, for instance, the following moves to receiver KA9Q_0 and a 20m wspr channel:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">recording</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">KA9Q_0</span><span class="o">/</span><span class="mi">20</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>Here, you can invoke the wdww alias that dynamically lists the wav files for that channel.  A problem exists if you see no files or don’t see regular incrementing of the latest file size.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wdww</span>
+</pre></div>
+</div>
+</section>
+<section id="check-the-logs">
+<h2>Check the logs<a class="headerlink" href="#check-the-logs" title="Link to this heading"></a></h2>
+<p>You can locate logs using something like the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>find . -type f -name &quot;*.log&quot; ! -name &quot;*sox.log&quot; ! -name &quot;*error.log&quot;
+</pre></div>
+</div>
+<p>where:</p>
+<ul class="simple">
+<li><p>“.” indicates starting the search from the current directory</p></li>
+<li><p>“-type” directs the search only for files</p></li>
+<li><p>“-name” specifies the filename of interest</p></li>
+<li><p>“! -name” specifies names to exclude</p></li>
+</ul>
+<section id="logs-in-var-log">
+<h3>logs in /var/log<a class="headerlink" href="#logs-in-var-log" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>/var/log/wspr.log</p></li>
+<li><p>/var/log/ft8.log</p></li>
+<li><p>/var/log/ft4.log</p></li>
+</ul>
+</section>
+<section id="logs-in-wsprdaemon">
+<h3>logs in ~/wsprdaemon<a class="headerlink" href="#logs-in-wsprdaemon" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>./wav-archive.d/grape_upload_daemon.log</p></li>
+<li><p>./ka9q-radio_build.log</p></li>
+<li><p>./grep.log</p></li>
+<li><p>./ps.log</p></li>
+<li><p>./diff.log</p></li>
+<li><p>./git.log</p></li>
+<li><p>./uploads.d/wsprdaemon.d/upload_to_wsprdaemon_daemon.log</p></li>
+<li><p>./uploads.d/wsprnet.d/spots.d/upload_to_wsprnet_daemon.log</p></li>
+<li><p>./ft8_lib_build.log</p></li>
+<li><p>./onion-build.log</p></li>
+<li><p>./noise_plot.log</p></li>
+<li><p>./ka9q_web_daemon.log</p></li>
+<li><p>./ka9q-web_build.log</p></li>
+<li><p>./watchdog_daemon.log</p></li>
+<li><p>./ka9q_web_service_8081.log</p></li>
+</ul>
+</section>
+<section id="logs-in-dev-shm-wsprdaemon">
+<h3>logs in /dev/shm/wsprdaemon<a class="headerlink" href="#logs-in-dev-shm-wsprdaemon" title="Link to this heading"></a></h3>
+<p>Note: the 2nd and 3rd subdirectories will vary according to your receivers and channels.</p>
+<ul class="simple">
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/posting_daemon.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/decoding_daemon.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/find.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/metadump.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/ka9q_status.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/sox-stats.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/adc_overloads.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/sox.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/get-peak-wav-sample.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/W_120/decoding_daemon.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/wav_status.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/add_derived.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE/80eu/printf.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE_WWV/wav-record-daemon-all.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE_WWV/pcmrecord-errors.log</p></li>
+<li><p>./recording.d/KA9Q_LONGWIRE_WWV/pcmrecord-outs.log</p></li>
+<li><p>./uploads.d/wsprdaemon.d/grep.log</p></li>
+<li><p>./uploads.d/wsprnet.d/curl.log</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../maintenance/aliases.html" class="btn btn-neutral float-left" title="Aliases for monitoring and interacting with WD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="typicals.html" class="btn btn-neutral float-right" title="Some typical problems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rob Robinett.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

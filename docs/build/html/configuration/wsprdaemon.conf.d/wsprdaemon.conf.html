@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example of a working wsprdaemon.conf &mdash; wsprdaemon 3.3.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            wsprdaemon
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Description</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../description/how_it_works.html">How wsprdaemon Works</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../description/validity.html">Validity of data path and results</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Requirements</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../requirements/os.html">Operating Sytems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../requirements/radios.html">Compatible Radios</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../requirements/network.html">Networking</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Software Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation/preparation.html">Preparing for installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation/git.html">Download the software with GIT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation/git.html#to-install-ka9q-radio-independently">To install ka9q-radio independently:</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Software Configuration</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../wd_conf.html">Configuring wsprdaemon: wsprdaemon.conf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../radiod_conf.html">Configuring ka9q-radio: radiod&#64;.conf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ka9q-web.html">ka9q-web</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Working Results</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../results/wspr.html">WSPR spots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results/grape.html">HamSCI WWV/H and CHU Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results/psk.html">PSKReporter</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Maintenance &amp; Updates</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../maintenance/operating.html">Operating WD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../maintenance/monitoring.html">Monitoring WD operation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../maintenance/aliases.html">Aliases for monitoring and interacting with WD</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting/overview.html">Troubleshooting wsprdaemon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting/typicals.html">Some typical problems</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">FAQ</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../FAQ.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">External Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../external_links.html">External Links</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contributors</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contributors.html">Contributors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">wsprdaemon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Example of a working wsprdaemon.conf</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/configuration/wsprdaemon.conf.d/wsprdaemon.conf.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="example-of-a-working-wsprdaemon-conf">
+<h1>Example of a working wsprdaemon.conf<a class="headerlink" href="#example-of-a-working-wsprdaemon-conf" title="Link to this heading"></a></h1>
+<p>Minimalist configuration for a stand-alone machine that listens to wspr and WWV/CHU streams from radiod (ka9q-radio), then processes and uploads the results to wsprnet, wsprdaemon.org, pskreporter, and pswsnetwork.caps.ua.edu.</p>
+<p>You will find further details on these parameters and definitions in</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="computer.html"><span class="std std-doc">Computer-related parameters</span></a></p></li>
+<li><p><a class="reference internal" href="ka9q-radio.html"><span class="std std-doc">ka9q-radio/web parameters</span></a></p></li>
+<li><p><a class="reference internal" href="reporting.html"><span class="std std-doc">reporting parameters</span></a></p></li>
+<li><p><a class="reference internal" href="receivers.html"><span class="std std-doc">receiver definitions</span></a></p></li>
+<li><p><a class="reference internal" href="schedule.html"><span class="std std-doc">schedule definitions</span></a></p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Computer-related parameters:</span>
+<span class="c1"># RAC setup enables WD supporters to access your machine remotely.  Get a RAC # from Rob Robinett.</span>
+<span class="c1"># WD will run without this </span>
+<span class="n">REMOTE_ACCESS_CHANNEL</span><span class="o">=</span><span class="mi">27</span>
+<span class="n">REMOTE_ACCESS_ID</span><span class="o">=</span><span class="s2">&quot;AC0G-BEE1&quot;</span>
+
+<span class="c1"># CPU/CORE TUNING if neccessary</span>
+<span class="c1"># the following will restrict wd processes to particular cores if necessary (e.g., Ryzen 7 - 5700 series)</span>
+<span class="c1"># WD will run without this</span>
+<span class="n">WD_CPU_CORES</span><span class="o">=</span><span class="s2">&quot;2-15&quot;</span>
+<span class="n">RADIOD_CPU_CORES</span><span class="o">=</span><span class="s2">&quot;0-1&quot;</span>
+
+<span class="c1"># 2. ka9q-radio/web parameters</span>
+<span class="n">KA9Q_RADIO_COMMIT</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
+<span class="n">KA9Q_RUNS_ONLY_REMOTELY</span><span class="o">=</span><span class="s2">&quot;no&quot;</span> 
+<span class="n">KA9Q_CONF_NAME</span><span class="o">=</span><span class="s2">&quot;ac0g-bee1-rx888&quot;</span>
+<span class="n">KA9Q_WEB_COMMIT_CHECK</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
+<span class="c1"># If you don&#39;t set the title here, it will default to the description in the radiod@config file</span>
+<span class="n">KA9Q_WEB_TITLE</span><span class="o">=</span><span class="s2">&quot;AC0G_@EM38ww_Longwire&quot;</span>
+
+<span class="c1"># 3. Reporting parameters</span>
+<span class="c1"># for contributing to HamSCI monitoring of WWV/CHU</span>
+<span class="n">GRAPE_PSWS_ID</span><span class="o">=</span><span class="s2">&quot;S000171_172&quot;</span>
+<span class="c1"># for reporting to wsprdaemon.org</span>
+<span class="n">SIGNAL_LEVEL_UPLOAD</span><span class="o">=</span><span class="s2">&quot;noise&quot;</span>  
+<span class="n">SIGNAL_LEVEL_UPLOAD_ID</span><span class="o">=</span><span class="s2">&quot;AC0G_BEE1&quot;</span>
+<span class="n">SIGNAL_LEVEL_UPLOAD_GRAPHS</span><span class="o">=</span><span class="s2">&quot;yes&quot;</span>  
+
+<span class="c1"># 4. Receiver definitions -- REQUIRED</span>
+<span class="c1"># two radiod receivers -- one for wspr and one for wwv</span>
+<span class="n">declare</span> <span class="n">RECEIVER_LIST</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">&quot;KA9Q_0_WSPR                  wspr-pcm.local     AI6VN         CM88mc    NULL&quot;</span>    
+        <span class="s2">&quot;KA9Q_0_WWV_IQ                wwv-iq.local       AI6VN         CM88mc    NULL&quot;</span>     
+<span class="p">)</span>
+
+<span class="c1"># 5. Schedule definitions -- REQUIRED</span>
+<span class="c1"># SCHEDULE</span>
+<span class="n">declare</span> <span class="n">WSPR_SCHEDULE</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">&quot;00:00  KA9Q_0_WSPR,2200,W2:F2:F5:F15:F30      KA9Q_0_WSPR,630,W2:F2:F5      KA9Q_0_WSPR,160,W2:F2:F5</span>
+                <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>                <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">80</span><span class="n">eu</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>     <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>
+                <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">60</span><span class="n">eu</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>              <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>       <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>
+                <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="n">W2</span>                      <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>       <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>
+                <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>                <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>       <span class="n">KA9Q_0_WSPR</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">W2</span><span class="p">:</span><span class="n">F2</span><span class="p">:</span><span class="n">F5</span>
+
+                <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">WWV_2_5</span><span class="p">,</span><span class="n">I1</span>               <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">WWV_5</span><span class="p">,</span><span class="n">I1</span>        <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">WWV_10</span><span class="p">,</span><span class="n">I1</span>
+                <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">WWV_15</span><span class="p">,</span><span class="n">I1</span>                <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">WWV_20</span><span class="p">,</span><span class="n">I1</span>       <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">WWV_25</span><span class="p">,</span><span class="n">I1</span>
+                <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">CHU_3</span><span class="p">,</span><span class="n">I1</span>                 <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">CHU_7</span><span class="p">,</span><span class="n">I1</span>        <span class="n">KA9Q_0_WWV_IQ</span><span class="p">,</span><span class="n">CHU_14</span><span class="p">,</span><span class="n">I1</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rob Robinett.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

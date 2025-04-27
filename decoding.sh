@@ -65,8 +65,13 @@ function get_af_db() {
             default_value=${fields[1]}
             wd_logger 1 "Found default value ${default_value}"
         elif [[ ${fields[0]} == ${real_receiver_rx_band} ]]; then
-            wd_logger 1 "Found AF value ${fields[1]} for receiver ${real_receiver_name}, band ${real_receiver_rx_band}"
-            eval ${return_variable_name}=${fields[1]}
+            if (( ${#fields[@]} < 2 )); then
+                 wd_logger 1 "ERROR: The the AF gain for receiver ${real_receiver_name}, band ${real_receiver_rx_band} is missing on the receive config file line, so default to 0"
+                 eval ${return_variable_name}=0
+             else
+                 wd_logger 1 "Found AF value ${fields[1]} for receiver ${real_receiver_name}, band ${real_receiver_rx_band}"
+                 eval ${return_variable_name}=${fields[1]}
+            fi
             return 0
         fi
     done
@@ -96,6 +101,10 @@ function calculate_nl_adjustments() {
     ### In each of these assignments, if cal_vals[] was not defined above from the file 'noise_ca_vals.csv', then use the default value.  e.g. cal_c2_correction will get the default value '-187.7
     local cal_nom_bw=${cal_vals[0]-320}        ### In this code I assume this is 320 hertz
     local cal_ne_bw=${cal_vals[1]-246}
+    if (( cal_ne_bw == 0 )); then
+        wd_logger 1 "ERROR: cal_ne_bw = 0, which is an invalid value.  So assign the default value of '246'"
+        cal_ne_bw=246
+    fi
     local cal_rms_offset=${cal_vals[2]--50.4}
     local cal_fft_offset=${cal_vals[3]--41.0}
     local cal_fft_band=${cal_vals[4]--13.9}
@@ -624,6 +633,13 @@ function adjust_file_named_59_seconds_to_nearest_minute() {
         eval ${__return_new_file_path}=${adjust_current_file_path}      ## By default don't rename the file
         return 0
     fi
+
+    if [[ "${ADJUST_FILENAME_TO_NEAREST_SECOND_ZERO-no}" == "no" ]]; then
+        wd_logger 1 "ERROR: ADJUST_FILENAME_TO_NEAREST_SECOND_ZERO is 'no' but '${adjust_current_file_path##*/}' is named for second '${adjust_current_file_seconds}' not the expected '00'"
+        eval ${__return_new_file_path}=${adjust_current_file_path}      ## By default don't rename the file
+        return 0
+    fi
+
     local current_file_seconds_int=$(( 10#${adjust_current_file_seconds} ))
     if (( current_file_seconds_int > FILE_NAME_REJECT_SECONDS_MIN && current_file_seconds_int < FILE_NAME_REJECT_SECONDS_MAX )); then
         wd_logger 1 "ERROR: File ${adjust_current_file_path##*/} is named for second ${adjust_current_file_seconds}, which is not in the acceptable range of ${FILE_NAME_REJECT_SECONDS_MAX} to ${FILE_NAME_REJECT_SECONDS_MIN} seconds, so dump the file"
@@ -736,6 +752,121 @@ COMMENTED_OUT_LINES
     return 0
 } 
 
+function file_is_open() {
+    local file_path="${1}"
+    local kiwirecorder_file_must_be_closed_seconds=${2}  ### If the file is being written by kiwirecorder, then typically wait for it to be 2+ seconds old before report back that the wav file is filled
+
+    local file_directory="${file_path%/*}"
+    if [[ "${file_directory}" != "${PWD}" ]]; then
+        if lsof ${file_path} >& /dev/null; then
+             wd_logger 1 "Running in ${PWD}, ${file_path} is open"
+             return 0
+         else
+             wd_logger 1 "Running in ${PWD}, ${file_path} is closed"
+             return 1
+        fi
+    else
+        local  file_age_seconds=$(( $(date +%s) - $(stat --format=%Y ${file_path}) ))
+         if (( file_age_seconds < kiwirecorder_file_must_be_closed_seconds )); then
+             wd_logger 1 "'${file_path}' has been closed only for ${file_age_seconds}, so we can assume kiwirecorder is still writing to it"
+             return 0
+         else
+             wd_logger 1 "'${file_path}' has been closed for  ${file_age_seconds} which is more than the ${kiwirecorder_file_must_be_closed_seconds} seconds we expect will signal that kiwirecorder is finished writing sampled to it. So consider it a closed file"
+             return 1
+         fi
+    fi
+}
+
+declare last_wav_file_name=""
+declare wav_file_create_time_log_file="./wav_file_create_time.log"  ### each RX888 band has its own create lime log file
+declare WWV_START_CMD="${WSPRDAEMON_ROOT_DIR}/wwv_start.py"
+if ! [[ -x $WWV_START_CMD ]]; then
+    wd_logger 1 "ERROR: can't find expected program '$WWV_START_CMD'"
+    return 1
+fi
+
+function log_wav_file_create_times() {
+    local wav_file_name="$1"
+
+    wd_logger 1 "Logging wav file '$wav_file_name' create time line to $wav_file_create_time_log_file"
+
+    if [[ ! -f "$wav_file_name" ]]; then
+        wd_logger 1 "ERROR: can't find '$wav_file_name'"
+        return 1
+    fi
+
+    if [[ -z "$last_wav_file_name" ]]; then
+        echo "$(date): ================ starting decoding ==============="  >> "$wav_file_create_time_log_file"
+        last_wav_file_name="$wav_file_name"
+    fi
+    local file_stat_list=($( stat "$wav_file_name"  | awk '/File/{printf "%s:", $2} /Size/{printf " Size:%s", $2} /Birth/{printf " Birth:%s", $3} /Change/{printf " Change:%s", $3}  END {printf "\n"}' ))
+
+    file_stat_list[4]="Tone_burst_offset:Not_measured"
+    if [[ ${WWV_TONE_BURST_LOGGING-no} == "yes" && "$wav_file_name" =~ WWV ]]; then
+        local wwv_burst_offset_msecs=0
+        wwv_burst_offset_msecs=$( $WWV_START_CMD "$wav_file_name" )
+        file_stat_list[4]="Tone_burst_offset:${wwv_burst_offset_msecs// /_}"      ### For ease of parsing, replace' 's with '_'s
+        wd_logger 1 "The tone burst which starts each second is $wwv_burst_offset_msecs from the begining of '$wav_file_name'"
+    fi
+    echo "${file_stat_list[0]}  ${file_stat_list[1]}  ${file_stat_list[3]}  ${file_stat_list[2]}  ${file_stat_list[4]}"  >> "$wav_file_create_time_log_file"
+    truncate_file "$wav_file_create_time_log_file" ${MAX_CREATE_TIME_LOG-2000000}     ### Default is to truncate this log file to 2 MB 
+    return 0
+}
+
+function file_is_closed_or_last_write_was_seconds_ago() {
+    local file_path="${1}"
+    local wait_for_no_writes_seconds=${2}                ### Tyypicaly we wait for 60+ seconds for a one minute file to be filled
+    local kiwirecorder_file_must_be_closed_seconds=${3}  ### If the file is being written by kiwirecorder, then typically wait for it to be 2+ seconds old before report back that the wav file is filled
+
+    local file_directory="${file_path%/*}"
+    if [[ "${file_directory}" != "${PWD}" ]]; then
+        wd_logger 2 "Checking ${file_path} is not in ${PWD}, so assuming it is being written by pcmrecord and ths wait for it to be closed"
+        local start_second=${SECONDS}
+        if ! lsof ${file_path} >& /dev/null; then
+             wd_logger 2 "The file ${file_path} is closed"
+             return 0
+         else
+            wd_logger 1 "The file ${file_path} is open so run 'inotifywait -e close ${newest_file_name}' so we wakeup when it is closed"
+            inotifywait -e close ${newest_file_name} >& /dev/null
+            rc=$? ; if (( rc )); then
+            wd_logger 1 "ERROR: After $(( SECONDS - start_second )) seconds, 'inotifywait -e close ${newest_file_name}' => ${rc}"
+                return ${rc}
+            else
+                log_wav_file_create_times "$newest_file_name"
+
+                local date_time_list=( $(stat $newest_file_name | awk '/Modify/{printf "%s %s", $2, $3} ') )
+                local date=${date_time_list[0]}
+                local hhmmss=${date_time_list[1]%.*}
+                local microseconds=${date_time_list[1]##*.}
+                local seconds=$(( 10#${hhmmss##*:} ))                  ### converts second 00-59 to a decimal integer 
+                local max_delay_secs=${RECORDING_MAX_DELAY_SECONDS-2}  ### If 'stat' reports last write is greater than 2 seconds 
+                local min_early_secs=${RECORDING_MIN_EARLY_SECONDS-59} ### and it is earlier than second 59, then log error
+                if (( (seconds > max_delay_secs) && (seconds < min_early_secs) )); then
+                    wd_logger 1 "ERROR: File ${newest_file_name##*/} last write time ${date_time_list[*]} is not in second 00"
+                else
+                    wd_logger 1 "File ${newest_file_name##*/} last write time ${date_time_list[*]} shows it has been closed in second $seconds after a wait of $(( SECONDS - start_second )) seconds"
+                fi
+                return 0
+            fi
+        fi
+    fi
+
+    wd_logger 2 "Check that file in ${PWD} has not been written for ${wait_for_no_writes_seconds} seconds since it is probably being written by kiwirecorders which opens and closes the file every second to write new smaples"
+    local file_age_seconds
+    local timeout=${wait_for_no_writes_seconds}
+    while (( --timeout >= 0 )) &&  file_age_seconds=$(( $(date +%s) - $(stat --format=%Y ${newest_file_name}) )) &&  ((file_age_seconds <  kiwirecorder_file_must_be_closed_seconds)) ; do
+        wd_logger 2 "File ${newest_file_name} is only ${file_age_seconds} seconds old, so sleep 1 second and check again"
+        sleep 1
+    done
+    if (( file_age_seconds >= kiwirecorder_file_must_be_closed_seconds )); then
+        wd_logger 2 "File ${newest_file_name} has been closed for ${file_age_seconds} seconds, so we can assume kiwirecorder is really done with it"
+        return 0
+    else
+        wd_logger 1 "ERROR: timeout after ${wait_for_no_writes_seconds} seconds while waiting for ${file_path} to be at least ${kiwirecorder_file_must_be_closed_seconds} seconds old"
+        return 1
+    fi
+}
+
 ### Waits for wav files needed to decode one or more of the WSPR packet length wav file  have been fully recorded
 ### Then returns zero or more space-seperated strings each of which has the form 'WSPR_PKT_SECONDS:ONE_MINUTE_WAV_FILENAME_0,ONE_MINUTE_WAV_FILENAME_1[,ONE_MINUTE_WAV_FILENAME_2...]'
 
@@ -772,43 +903,24 @@ function get_wav_file_list() {
         wd_logger 2 "'spawn_wav_recording_daemon ${receiver_name} ${receiver_band}' has checked and spawned the wav file recorder"
     fi
 
-    ### An instance of kiwirecorders run and outputs wav files in the same directory as decoding, i.e. /dev/shm/recording.d/KIWI_0/20/
-    ### There is one instance of the KA9Q stream recorder which outputs all wav files from the stream in the parent directory, i.e. /dev/shm/recording.d/KA9Q_0/
+    ### If the wav file is created from a Kiwi by kiwirecorder.py, then its wav files are stored in the same directory as decoding, i.e. /dev/shm/recording.d/KIWI_0/20/
+    ### If the wav file is createed by pcmrecorder from a KA9Q-radio server, There is one instance of the KA9Q stream recorder which outputs all wav files from the stream in the parent directory, i.e. /dev/shm/recording.d/KA9Q_0/
     local wav_recording_dir=$(get_recording_dir_path ${receiver_name} ${receiver_band})
 
-    ### The pcmrecord wav files are created with names which different from those created by kiwirecorder
+    ### Kiwirecorder.py and pcmrecordder create files with the same name format
     local band_freq_hz=$( get_wspr_band_freq_hz ${receiver_band} )
     local wav_file_regex="*_${band_freq_hz}_*.wav"
-
-    # Start:
-    # Find all wav files for this band abd sort by reverse time (i.e newest in [0]
-    # if there are no files, then
-    #    goto Start
-    # if the newest is open
-    #    remove it from the list
-    # if there are less than 2 open files
-    #    goto Start
-    # go through the list and if there is a gap
-    #    delete all files after the gap
-    # if there are now less than 2 files 
-    #    goto Start
-    # for each pkt length MINs (2/5/15/30)
-    #    If there is a packet of length MIN
-    #        add list for MIN to return list
-    # if return list is empty
-    #    goto Start
-    # Remove all files older than the longest pkt length we searched for
-    # Return list
 
     wd_logger 2 "Starting 'while (( \${#return_list[@]} == 0 )); do ...'."
     local wait_for_newest_file_to_close="no"
     local return_list=()
     while (( ${#return_list[@]} == 0 )); do
         ### Get a list of all wav files for this band
-        wd_logger 2 "Get new find_files_list[] by running 'find ${wav_recording_dir} -maxdepth 1 -name '${wav_file_regex}' | sort -r '"
+        wd_logger 1 "Get new find_files_list[] by running 'find ${wav_recording_dir} -maxdepth 1 -name '${wav_file_regex}' | sort -r '"
         find ${wav_recording_dir} -maxdepth 1 -name "${wav_file_regex}" >& find.log
         rc=$? ; if (( rc )); then
             wd_logger 1 "ERROR: find ${wav_recording_dir} -maxdepth 1 -name ${wav_file_regex} > find.log:\n$(<find.log)"
+            sleep 1
             continue
         fi
         local find_files_list=()
@@ -820,51 +932,49 @@ function get_wav_file_list() {
             continue
         fi
         ### There is at least one file on the list
-        wd_logger 2 "find_files_list[] has ${#find_files_list[@]} entries: ${find_files_list[@]##*/}"
+        wd_logger 1 "find_files_list[] has ${#find_files_list[@]} entries: ${find_files_list[@]##*/}"
 
         local newest_file_name=${find_files_list[0]}
 
         if [[ ${wait_for_newest_file_to_close} == "yes" ]]; then
-            ### We found a list but couldn't create a return_list[]
-            while lsof ${newest_file_name} >& /dev/null; do
-                wd_logger 1 "We found a list but couldn't create a return_list[], so waiting for the newest file for minute '$(minute_from_filename ${newest_file_name})' is not being written by running 'inotifywait -e close ${newest_file_name##*/}'"
-                inotifywait -e close ${newest_file_name} >& /dev/null
-                wd_logger 2 "File ${newest_file_name##*/} has been closed"
-            done
-            wd_logger 2 "This newest File ${newest_file_name##*/} has been closed, so sleep 1 and then refresh the file list"
+            ### We previously found a list but couldn't create a return_list[], so wait until the newest file is closed before checking again
+            wd_logger 1 "Waiting for ${WAIT_FOR_FILE_TO_CLOSE_SECONDS-65} seconds for the newest file ${newest_file_name} to be closed or not written to for ${KIWIRECORDER_WRITE_IS_FINISHED_SECONDS-2} seconds"
+            file_is_closed_or_last_write_was_seconds_ago ${newest_file_name}  ${WAIT_FOR_FILE_TO_CLOSE_SECONDS-65}  ${KIWIRECORDER_WRITE_IS_FINISHED_SECONDS-2}
+            wd_logger 1 "After waiting for the newest file ${newest_file_name} to be closed, cancel wait_for_newest_file_to_close and check again"
             wait_for_newest_file_to_close="no"
             sleep 1
             continue
         fi
 
-        if lsof ${newest_file_name} >& /dev/null; then
-            wd_logger 2 "The newest file ${newest_file_name##*/} in the list of ${#find_files_list[@]} files is open, so remove it from find_files_list[]"
+        if file_is_open ${newest_file_name} ${KIWIRECORDER_WRITE_IS_FINISHED_SECONDS-2} ; then
+            wd_logger 1 "The newest file ${newest_file_name##*/} in the list of ${#find_files_list[@]} files is open, so remove it from find_files_list[]"
             find_files_list=( ${find_files_list[@]:1} )
-            wd_logger 2 "There are now ${#find_files_list[@]} elements in find_files_list[@]"
+            wd_logger 1 "There are now ${#find_files_list[@]} elements in find_files_list[@]"
             if (( ${#find_files_list[@]} < 1 )); then
                 wd_logger 2 "There are no closed files on the list, so leave it to the next block of code to sleep until it is closed"
             fi
         fi
-        wd_logger 2 "After removing any open file there are now ${#find_files_list[@]} closed files: ${find_files_list[@]##*/}"
+        wd_logger 1 "After removing any open files from the find_files_list[], there are now ${#find_files_list[@]} closed files: ${find_files_list[@]##*/}"
 
-        if (( ${#find_files_list[@]} < 2 )); then
-            wd_logger 2 "Found only ${#find_files_list[@]} closed wav files in ${wav_recording_dir}, so wait until the newest (minute '$(minute_from_filename ${newest_file_name})') file ${newest_file_name##*/} is not being written by running 'inotifywait -e close ${newest_file_name##*/}'"
-            while lsof ${newest_file_name} >& /dev/null; do
-                wd_logger 2 "Running inotifywait -e close ${newest_file_name##*/}"
-                inotifywait -e close ${newest_file_name} >& /dev/null
-                wd_logger 2 "File ${newest_file_name##*/} has been closed"
-            done
-            wd_logger 2 "File ${newest_file_name##*/} has been closed, so sleep 1 and then refresh the file list"
-            sleep 1
+        if (( ${#find_files_list[@]} <= 2 )); then
+            wd_logger 1 "Found only ${#find_files_list[@]} closed wav files in ${wav_recording_dir}, so wait until the newest (minute '$(minute_from_filename ${newest_file_name})') file ${newest_file_name##*/} is not being written"
+            if file_is_closed_or_last_write_was_seconds_ago ${newest_file_name}  ${WAIT_FOR_FILE_TO_CLOSE_SECONDS-65} ${KIWIRECORDER_WRITE_IS_FINISHED_SECONDS-2}; then
+                wd_logger 1 "' ${newest_file_name}' is closed, so start search for files again"
+                sleep 1
+            else
+                wd_logger 1 "ERROR: 'file_is_closed_or_last_write_was_seconds_ago ${newest_file_name} ${WAIT_FOR_FILE_TO_CLOSE_SECONDS-65} ${KIWIRECORDER_WRITE_IS_FINISHED_SECONDS-2}' => $?.  So sleep 1 and start search againi"
+                sleep 1
+            fi
             continue
         fi
+
         ### ${#find_files_list[@]} has 2 or more closed files in it list
         ### [0] is newest file
 
         ### Cleanup the file list so that it contains only a contiguous list of files, each starting one minute later than the previous file
         local find_files_count=${#find_files_list[@]}
-        wd_logger 2 "The 'find' command found ${find_files_count} closed wav files in '${wav_recording_dir}': '${find_files_list[*]##*/}'"
-        wd_logger 2 "Removing any files in the list which preceed any gap"
+        wd_logger 1 "The 'find' command found ${find_files_count} closed wav files in '${wav_recording_dir}': '${find_files_list[*]##*/}'"
+        wd_logger 1 "Removing any files in the list which preceed any gap"
 
         local last_file_name="${find_files_list[0]}"
         local checked_files_list=( ${last_file_name} )
@@ -933,7 +1043,7 @@ function get_wav_file_list() {
             wd_logger 1 "'find' returned a list of ${find_files_count}, but only the last ${checked_files_count} were contiguous one minute long files"
         fi
         if (( checked_files_count < 2 )); then
-            wd_logger 2 "After checking found only ${checked_files_count} files, so search again"
+            wd_logger 1 "After checking found only ${checked_files_count} files, so search again"
             sleep 1
             continue
         fi
@@ -1364,6 +1474,21 @@ declare SOX_MAX_PEAK_LEVEL="${SOX_MAX_PEAK_LEVEL--1.0}"                         
 declare GET_PEAK_WAV_SAMPLE_CMD="${WSPRDAEMON_ROOT_DIR}/get-peak-wav-sample.py"     ### A little script created by chatgbt
 declare GET_PEAK_WAV_SAMPLE_LOG_FILE="./get-peak-wav-sample.log"                     ### This file should have the peak amplitude in linear and also in dbFS
 
+function is_a_float() {
+    local value=$1
+
+    if [[ -z "${value}" ]]; then
+        wd_logger 1 "'${value}' is empty, so it can't be a float"
+        return 1
+    fi
+    if ! [[ ${value} =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+        wd_logger 1 "'${value}' is not a float or int"
+        return 1
+    fi
+    wd_logger 2 "'${value}' is a float"
+    return 0
+}
+
 function decoding_daemon() {
     local receiver_name=$1                ### 'real' as opposed to 'merged' receiver
     local receiver_band=${2}
@@ -1436,7 +1561,7 @@ function decoding_daemon() {
 
     local last_adc_overloads_count=-1     ### Remember the count from 2 minutes ago
 
-    ### Rather than the time and effort for altering the code to work on blocks of 12000 samples to get a 1 Hz quantization Gwynn suggested the alternative is simple scaling: multiply reported frequency for out-of-the-box GPS aided
+    # ### Rather than the time and effort for altering the code to work on blocks of 12000 samples to get a 1 Hz quantization Gwynn suggested the alternative is simple scaling: multiply reported frequency for out-of-the-box GPS aided
     ### Kiwi by 12001.1/12000 that is 1.00009167. This is a frequency increase of 0.128 Hz at 1400 Hz and 0.147 Hz at 1600 Hz.
     ### So if  SPOT_FREQ_ADJ_HZ is not blank, then modify the frequency of each spot by that floating point HZ value.  SPOT_FREQ_ADJ_HZ defaults to +.1 Hz which is the audio frequency error of a Kiwi using its internal 66.6666 Mhz oscillator 
     local freq_adj_mhz=0
@@ -1509,11 +1634,11 @@ function decoding_daemon() {
         fi
         mode_wav_file_list=( ${mode_seconds_files} )        ### I tried to pass the name of this array to get_wav_file_list(), but I couldn't get 'eval...' to populate that array
         if [[ ${#mode_wav_file_list[@]} -le 0 ]]; then
-            wd_logger 2 "ERROR: get_wav_file_list() returned no error, but it unexpectadly has returned no lists.  So sleep 1 and retry"
+            wd_logger 1 "ERROR: get_wav_file_list() returned no error, but it unexpectadly has returned no lists.  So sleep 1 and retry"
             sleep 1
             continue
         fi
-        wd_logger 2 "The call 'get_wav_file_list mode_wav_file_list ${receiver_name} ${receiver_band} ${receiver_modes}' returned lists: '${mode_wav_file_list[*]}'"
+        wd_logger 1 "The call 'get_wav_file_list mode_wav_file_list ${receiver_name} ${receiver_band} ${receiver_modes}' returned lists: '${mode_wav_file_list[*]}'"
         if [[ "${TEST_RECORDING_DAEMON-no}" == "yes" ]]; then
             local mode_seconds
             local seconds_files
@@ -1541,7 +1666,7 @@ function decoding_daemon() {
                 done
                 wd_logger 1 "We have been given a list of one minute files which together create a ${mode_minutes} minute wspr pkt of minutes '${one_minutes_list[*]}': ${file_minutes_list[*]}"
             done
-            wd_logger 2 "Report of retuned lists is complete. Go back and call get_wav_file_list() to get new lists"
+            wd_logger 1 "Report of retuned lists is complete. Go back and call get_wav_file_list() to get new lists"
             continue
         fi
  
@@ -1728,7 +1853,7 @@ function decoding_daemon() {
         else
             declare  MAX_ACCEPTABLE_ADC_OVERLOADS_COUNT=${MAX_ACCEPTABLE_ADC_OVERLOADS_COUNT-2147483646}          ### The Timescale field can't store integers larger than this
 
-            new_sdr_overloads_count=$(( ${adc_overloads_count} - ${last_adc_overloads_count} ))
+            new_sdr_overloads_count=$(( adc_overloads_count - last_adc_overloads_count ))
             wd_logger 2 "adc_overloads_count '${adc_overloads_count}' - last_adc_overloads_count '${last_adc_overloads_count}' =>  new_sdr_overloads_count '${new_sdr_overloads_count}'"
             if [[ ${new_sdr_overloads_count} -lt 0 ]]; then
                 wd_logger 1 "new_sdr_overloads_count '${new_sdr_overloads_count}' is less than 0, so count has rolled over and just use {adc_overloads_count '${adc_overloads_count}'"
@@ -1742,7 +1867,8 @@ function decoding_daemon() {
         local ov_returned_files=${mode_wav_file_list[0]}
         local ov_comma_separated_files=${ov_returned_files#*:}        ### Chop off the SECONDS: leading the list
         local ov_wav_file_list=( ${ov_comma_separated_files//,/ } )
-        local ov_first_input_wav_filename="${ov_wav_file_list[0]:2:6}_${ov_wav_file_list[0]:9:4}.wav"
+        local ov_wav_file=$(basename ${ov_wav_file_list[0]})
+        local ov_first_input_wav_filename="${ov_wav_file:2:6}_${ov_wav_file:9:4}.wav"
 
         if (( ${adc_overloads_print_line_count} % ${ADC_LOG_HEADER_RATE-16} == 0)) ; then
              printf "DATE_TIME          OV_COUNT  NEW_OVs  RF_GAIN     ADC_DBFS        N0   CH_DBFS   CH_GAIN\n"  >> ${ADC_OVERLOADS_LOG_FILE_NAME}
@@ -1866,31 +1992,40 @@ function decoding_daemon() {
 
             local sox_effects="${SOX_ASSEMBLE_WAV_FILE_EFFECTS-}"
 
-            wd_logger 2 "sox is creating a 2/5/15/30 minute long wav file ${decoder_input_wav_filepath} using '${sox_effects}' effects"
+            wd_logger 1 "sox is creating a 2/5/15/30 minute long wav file ${decoder_input_wav_filepath} using '${sox_effects}' effects"
 
             ### Concatenate the one minute files to create a single 2/5/15/30 minute file
             ### Since WD 3.3.x pcmrecord may be reording 1 minute 32 bit float files, 
             ### so add '-b 16 -e signed-integer' to instruct sox to alway output a 16 bit PCM file which is the format accepted by wsprd and jt9
             ### from: chatgbt:  sox --combine concatenate file1.wav file2.wav -b 16 -e signed-integer output.wav
 
+            ### Get stats on the input files
             local rc
             sox --combine concatenate ${wav_files_list[@]} -n stat >& ${SOX_LOG_FILE}
-             if (( rc )); then
+            rc=$? ; if (( rc )); then
                  wd_logger 1 "ERROR: while getting stats for the one minute files with 'sox --combine concatenate ${wav_files_list[@]} -n stat >& ${SOX_LOG_FILE}' => ${rc}:\n$(< ${SOX_LOG_FILE})"
              fi
-            local max_input_float_amplitude
-            max_input_float_amplitude=$(awk  '/Maximum amplitude:/{print $3}' ${SOX_LOG_FILE})
+            local max_input_float_amplitude=$(awk  '/Maximum amplitude:/{print $3}' ${SOX_LOG_FILE})
             local gain_in_db    ### In case we can't get the gain from sox
             local sox_normalization_dBFS=${SOX_NORMALIZATION_DBFS--1}        ### Default -1 dBFS creates 16 bit int wav file with max value 0.891251
             local sox_normalization_linear=$(bc -l <<< "scale = 6; e(${sox_normalization_dBFS}/20 * l(10))")
-            if [[ -z "${max_input_float_amplitude}" ]]; then
+            if ! is_a_float "${max_input_float_amplitude}" ; then
                 gain=0
-                wd_logger 1 "ERROR: can't get 'Maximum amplitude' of the input wav files from ${SOX_LOG_FILE}"
+                wd_logger 1 "ERROR: can't get 'Maximum amplitude' of the input wav files from ${SOX_LOG_FILE}:\n$(<${SOX_LOG_FILE})"
+            elif [[ "${max_input_float_amplitude}" =~ ^-?0+(\.0+)?$ ]]; then
+                gain=0
+                wd_logger "ERROR: ${max_input_float_amplitude} is an int or float zero in ${SOX_LOG_FILE}:\n$(<${SOX_LOG_FILE})"
             else
+                ### We are certain that ${max_input_float_amplitude} is not a zero
                 local gain_in_db=$(bc -l <<< "scale = 1; 20 * l( ${sox_normalization_linear} / ${max_input_float_amplitude} ) / l(10)")
                 wd_logger 1 "The 'Maximum amplitude' of the input files is ${max_input_float_amplitude}, so sox will automatically apply ${gain_in_db} dB gain while creating the 16bit PCM wav file"
             fi
-            ### Output a 16 bit int wav file from a list of input int or float wav files and normalize the output to -1 dBFS
+            wd_logger 2 "Finished getting AGC stats"
+
+            ### Create a 16 bit int wav file from a list of input int or float wav files and normalize the output to -1 dBFS
+            ### Replace the '-' with '_' in the print string or wd_logger's echo command gets confused by them
+            wd_logger 1 "Creating a single 2 minute wav file with: 'sox __combine concatenate ${wav_files_list[@]} _b 16 _e signed_integer ${decoder_input_wav_filepath} __norm=${sox_normalization_dBFS}  ${sox_effects}'"
+
             sox --combine concatenate ${wav_files_list[@]} -b 16 -e signed-integer ${decoder_input_wav_filepath} --norm=${sox_normalization_dBFS}  ${sox_effects} >& ${SOX_LOG_FILE}
             rc=$? ; if (( rc )); then
                 wd_logger 1 "ERROR: 'sox ${wav_files_list[*]} ${decoder_input_wav_filepath}  ${sox_effects} -n stat' => ${rc}:\n$(<  ${SOX_LOG_FILE})"
@@ -1905,6 +2040,7 @@ function decoding_daemon() {
                 continue
             fi
             wd_logger 1 "sox created ${decoder_input_wav_filepath} from ${#wav_files_list[@]} one minute wav files"
+            wd_logger 2 "     $(sox ${decoder_input_wav_filepath} -n stats 2>&1 )"
 
             ### Get statistics about the newly created wav file directly from sox
             sox ${decoder_input_wav_filepath} -n stats >& ${SOX_LOG_FILE}
@@ -2015,8 +2151,17 @@ function decoding_daemon() {
                     ###     'Pk lev dB'  'RMS lev dB'  'RMS Pk dB'  'RMS Tr dB'        'Pk lev dB'  'RMS lev dB'  'RMS Pk dB'  'RMS Tr dB'       'Pk lev dB'  'RMS lev dB'  'RMS Pk dB'  'RMS Tr dB      RMS_noise C2_noise  New_overload_events'
                     local c2_filename="${decode_dir}/000000_0001.c2" ### -c instructs wsprd to create the C2 format file "000000_0001.c2"
                     if [[ ! -f ${C2_FFT_CMD} ]]; then
-                        wd_logger 1 "Can't find the '${C2_FFT_CMD}' script"
-                        exit 1
+                        wd_logger 1 "ERROR: Can't find the '${C2_FFT_CMD}' script"
+                        if [[ ${got_cpu_semaphore} == "yes" ]]; then
+                            free_cpu
+                            rc=$? ; if (( rc )); then
+                            wd_logger 1 "ERROR: 'free_cpu' => ${rc}, but ignoring since we are aborting decoding because '${C2_FFT_CMD}' doesn't exist"
+                        else
+                            wd_logger 1 "Put cpu_busy semaphore now that decoding is done"
+                            fi
+                        fi
+                        sleep 1
+                        return 1
                     fi
                     local c2_fft_noise_level_float
                     nice -n ${WSPR_CMD_NICE_LEVEL} python3 ${C2_FFT_CMD} ${c2_filename} > ${c2_filename}.out 2> ${c2_filename}.stderr
@@ -2038,6 +2183,14 @@ function decoding_daemon() {
                     get_rms_levels  "sox_rms_noise_level_float" "rms_line" ${decoder_input_wav_filename} ${rms_nl_adjust}
                     rc=$? ; if (( rc )); then
                         wd_logger 1 "ERROR:  'get_rms_levels  sox_rms_noise_level_float rms_line ${decoder_input_wav_filename} ${rms_nl_adjust}' => ${rc}"
+                        if [[ ${got_cpu_semaphore} == "yes" ]]; then
+                            free_cpu
+                            rc=$? ; if (( rc )); then
+                            wd_logger 1 "ERROR: 'free_cpu' => ${rc}, but ignoring since we are aborting decoding because of a sox error"
+                        else
+                            wd_logger 1 "Put semaphore now that decoding is done"
+                            fi
+                        fi
                         return 1
                     fi
                     if [[ -n "${sdr_noise_level_adjust_float}" ]]; then
@@ -2100,8 +2253,7 @@ function decoding_daemon() {
                 fi
                 local rc1
                 wd_rm ${decode_dir_path}/${decoder_input_wav_filename}
-                rc1=$?
-                if [[ ${rc1} -ne 0 ]]; then
+                rc1=$? ; if (( rc1 )); then
                     wd_logger 1 "ERROR: 'wd_rm ${decode_dir_path}/${decoder_input_wav_filename}' => ${rc1}"
                 fi
 
@@ -2480,19 +2632,19 @@ function claim_cpu()
 
     wd_logger 1 "Starting an attempt to get one of the ${semaphore_max_count} semaphores in ${ACTIVE_DECODING_CPU_DIR}. Timeout after ${semaphore_timeout} seconds"
 
-    while [[ ${EPOCHSECONDS} -lt ${end_epoch} ]]; do
+    while (( EPOCHSECONDS < end_epoch )); do
         wd_mutex_lock ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} ${ACTIVE_DECODING_CPU_DIR}
         rc=$? ; if (( rc )) ; then
             wd_logger 1 "ERROR: timeout after waiting to get mutex within its default ${MUTEX_DEFAULT_TIMEOUT} seconds, but try again"
         else
-            wd_logger 2 "Got ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} in dir ${ACTIVE_DECODING_CPU_DIR} mutex"
+            wd_logger 1 "Got ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} in dir ${ACTIVE_DECODING_CPU_DIR} mutex"
             if [[ ! -f ${semaphore_count_filename} ]]; then
                 wd_logger 1 "Creating ${semaphore_count_filename} with count of 0" 
                 echo "0" > ${semaphore_count_filename}
             fi
             local current_semaphore_count=$(< ${semaphore_count_filename})
             local new_semaphore_count=-1
-            if [[ ${current_semaphore_count} -lt ${semaphore_max_count} ]]; then
+            if (( current_semaphore_count < semaphore_max_count )); then
                 new_semaphore_count=$(( current_semaphore_count + 1 ))
                 echo ${new_semaphore_count} > ${semaphore_count_filename}
             fi
@@ -2500,13 +2652,13 @@ function claim_cpu()
             rc=$? ; if (( rc )) ; then
                 wd_logger 1 "ERROR: When freeing ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} in dir ${ACTIVE_DECODING_CPU_DIR} muxtex, got unexpected error from 'wd_mutex_unlock ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} ${ACTIVE_DECODING_CPU_DIR}' => ${rc}"
             else
-                wd_logger 2 "Freed ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} in dir ${ACTIVE_DECODING_CPU_DIR} mutex"
+                wd_logger 1 "Freed ${ACTIVE_DECODING_CPU_SEMAPHORE_NAME} in dir ${ACTIVE_DECODING_CPU_DIR} mutex"
             fi
-            if (( {new_semaphore_count )); then
+            if (( new_semaphore_count > 0 )); then
                 wd_logger 1 "Current semaphone count ${current_semaphore_count} was less than max value ${semaphore_max_count}, so saved new count ${new_semaphore_count} and returning to caller"
                 return 0
             else
-                wd_logger 2 "Current semaphone count ${current_semaphore_count} is greater than or equal to the max value ${semaphore_max_count}. So sleep and try again"
+                wd_logger 1 "Current semaphone count ${current_semaphore_count} is greater than or equal to the max value ${semaphore_max_count}. So sleep and try again"
             fi
         fi
         wd_logger 2 "Sleeping 1 second"
@@ -2532,9 +2684,11 @@ function free_cpu()
             wd_logger 1 "ERROR: expected count file ${semaphore_count_filename} does not exist, so wd_semaphore_pget() never ran" 
         else
             local current_semaphore_count=$(< ${semaphore_count_filename})
+            wd_logger 1 "current_semaphore_count=${current_semaphore_count}"
             if (( current_semaphore_count )); then
                 (( --current_semaphore_count ))
                 echo ${current_semaphore_count} > ${semaphore_count_filename}
+                wd_logger 1 "Decremented and wrote new current_semaphore_count=${current_semaphore_count} to ${semaphore_count_filename}"
             else
                 wd_logger 1 "ERROR: found current count ${current_semaphore_count} is less than the expected >= 1"
             fi

@@ -236,33 +236,44 @@ function upload_24hour_wavs_to_grape_drf_server() {
 function grape_test_ssh_auto_login() {
     local station_id=$1
     local rc
-    ssh -F /dev/null -l ${station_id} -o BatchMode=yes -o ConnectTimeout=${GRAPE_PSWS_CONNECTION_TIMEOUT-10} ${PSWS_URL} true # &>/dev/null
-    rc=$?
-    if (( rc )); then
-        wd_logger 1 "Can't autologin to account '${station_id}'"
+
+    wd_logger 2 "Starting by trying to execute a 'ssh..."
+    timeout 5 ssh -o ConnectTimeout=3 -F /dev/null -l ${station_id} -o BatchMode=yes -o ConnectTimeout=${GRAPE_PSWS_CONNECTION_TIMEOUT-10} ${PSWS_URL} true # &>/dev/null
+    rc=$? ; if (( rc )); then
+        wd_logger 1 "ERROR: 'ssh ...' => $rc  So can't autologin to account '${station_id}'"
     else
         wd_logger 2 "Autologin to account '${station_id}' was successful"
     fi
-    return ${rc}
+    return $rc
 }
 
 ######  '-p'   upload public key to PSWS server
 function grape_upload_public_key() {
+    local rc
+
+    wd_logger 2 "Starting"
+
     if [[ -z "${GRAPE_PSWS_ID-}" ]]; then
         wd_logger 1 "ERROR: GRAPE_PSWS_ID has not been defined in wsprdameon.conf"
         return 1
     fi
+
     local station_id=${GRAPE_PSWS_ID%_*}   ### Chop off the _ID.. to get the PSWS site name
-    if grape_test_ssh_auto_login ${station_id} ; then
+    grape_test_ssh_auto_login $station_id
+    rc=$? ; if (( rc == 0 )); then
         wd_logger 2 "Autologin for site ${station_id} is already setup"
         return 0
     fi
+    if (( rc == 255 )); then
+        wd_logger 1 "ERROR: grape_test_ssh_auto_login() => $rc. This was probably a timeout, so can't setup PSWS auotlogin"
+        return $rc
+    fi
     wd_logger 1 "Setup autologin to the GRAPE server for this GRAPE SITE_ID='${station_id}' by entering when prompted the value of 'token' in the PSWS user's admim page"
-    ssh-copy-id -f ${station_id}@${PSWS_URL}
-    rc=$?
-    if (( rc )); then
+
+    ssh-copy-id -o ConnectTimeout=5 -f ${station_id}@${PSWS_URL}
+    rc=$? ; if (( rc )); then
         wd_logger 1 "ERROR: Failed to setup auto login. 'ssh-copy-id  ${station_id}@${PSWS_URL}' => ${rc}"
-        return ${rc}
+        return $rc
     fi
     wd_logger 1 "Auto login has been successfully set up"
     return 0
@@ -518,7 +529,7 @@ function grape_create_wav_file()
     wd_logger 1 "Creating one 24 hour, 10 hz wav file ${output_10sps_wav_file} from ${#compressed_wav_file_list[@]} .wv files..."
     local sox_log_file_name="${compressed_wav_file_dir}/sox.log"
     ulimit -n 2048    ### sox will open 1440+ files, so up the open file limit
-    nice -n 19 sox ${compressed_wav_file_list[@]} ${output_10sps_wav_file} rate 10 >& ${sox_log_file_name}
+    nice -n 19 sox ${compressed_wav_file_list[@]} --encoding float --bits 32 ${output_10sps_wav_file} rate 10 >& ${sox_log_file_name}
     rc=$? ; if (( rc )); then
         wd_logger 1 "ERROR: 'sox ...' => ${rc}:\n$(<${sox_log_file_name})"
          return ${GRAPE_ERROR_SOX_FAILED}
@@ -802,11 +813,14 @@ function grape_init() {
     grape_upload_public_key
     rc=$? ; if (( rc )); then
         wd_logger 1 "ERROR: can't setup auto login which is needed for uploads"
-        return ${rc}
     fi
-    return 0
+    return $rc
 }
 
-if ! grape_init ; then
-    wd_logger 1 "ERROR: grape_init => $?"
+grape_init
+rc=$?
+if (( rc )); then
+    wd_logger 1 "ERROR: grape_init => $rc"
 fi
+return $rc
+
